@@ -1,0 +1,3 @@
+This is an mp2 decoder written in JavaScript.
+
+It is a port of http://keyj.emphy.de/kjmp2/ .
