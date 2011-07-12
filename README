@@ -1,3 +1,5 @@
-This is an mp2 decoder written in JavaScript.
+This is an mp2 decoder written in JavaScript. Demo at: http://cosinusoidally.github.com/mp2dec.js/
 
-It is a port of http://keyj.emphy.de/kjmp2/ .
+It based on http://keyj.emphy.de/kjmp2/ (this port done by @cosinusoidally).
+
+The demo source code is a bit icky, but it works.
