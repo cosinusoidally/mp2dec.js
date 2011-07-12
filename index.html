@@ -47,6 +47,7 @@ kjmp2_decode_frame= mp2_dec.kjmp2_decode_frame;
 var get_mp2=function(f){
 xhr = new XMLHttpRequest();
 xhr.open("GET", "a.mp2", false);
+xhr.responseType = "arraybuffer";
 xhr.onload=f;
 xhr.send(null);
 };
