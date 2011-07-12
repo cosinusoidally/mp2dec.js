@@ -26,7 +26,7 @@ var samplerate=mp2_dec.kjmp2_get_sample_rate(frame);
 var bytes_read=mp2_dec.kjmp2_decode_frame(mp2,frame,pcm,l,r);
 </pre>
 <h2>Demo:</h2>
-<p>Retrieves whole file, then decodes it in one go. Once it has decoded you can then play the audio (a play button will appear). Should work in Firefox 5, and possibly 4. Decoding is scheduled using setTimeout, so keep this tab focused. Audio file is public domain. ( ... and about 2MB, so be patient).</p>
+<p>Retrieves whole file, then decodes it in one go. Once it has decoded you can then play the audio (a play button will appear). Should work in Firefox 5,6 , and possibly 4. Decoding is scheduled using setTimeout, so keep this tab focused. Audio file is public domain. ( ... and about 2MB, so be patient).</p>
 <script>
 
 var t=document.createElement("div");
