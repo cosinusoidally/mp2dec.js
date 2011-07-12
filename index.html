@@ -1,1 +1,204 @@
-My GitHub Page
+<html>
+
+<body>
+<h1>JavaScript mp2 decoder</h1>
+<p>
+JavaScript port of <a href="http://keyj.emphy.de/kjmp2/">http://keyj.emphy.de/kjmp2/</a> . Playback code based on a Mozilla Audio API example from: <a href="https://wiki.mozilla.org/Audio_Data_API">https://wiki.mozilla.org/Audio_Data_API</a>
+</p>
+<h2>API</h2>
+<pre>
+// The decoder lives in an iframe you need to load it into your document.
+// load the mp2 decoder (doesn't quite work like this yet, in the source you will see I'm doing foo("exports"))
+mp2_dec=require("mp2_decoder");
+
+// create mp2 state
+var mp2=mp2_dec.kjmp2_make_mp2_state();
+
+// initialise the decoder
+mp2_dec.kjmp2_init(mp2);
+
+// get your sample rate (frame is an array containing mp2 data)
+var samplerate=mp2_dec.kjmp2_get_sample_rate(frame);
+
+// decode your first frame
+// l and r are the output arrays (left and right channel)
+// pcm is unused (must be set to an empty array, silly bug)
+var bytes_read=mp2_dec.kjmp2_decode_frame(mp2,frame,pcm,l,r);
+</pre>
+<h2>Demo:</h2>
+<p>Retrieves whole file, then decodes it in one go. Should work in Firefox 5, and possibly 4. Decoding is scheduled using setTimeout, so keep this tab focused. Audio file is public domain.</p>
+<script>
+
+var t=document.createElement("div");
+document.body.appendChild(t);
+var took=document.createElement("div");
+document.body.appendChild(took);
+
+var box1=document.createElement("iframe");
+document.body.appendChild(box1);
+box1.style.display="none";
+box1.src="js/mp2dec.html";
+box1.onload=function(){
+mp2_dec=foo("exports");
+kjmp2_get_sample_rate=mp2_dec.kjmp2_get_sample_rate;
+kjmp2_init= mp2_dec.kjmp2_init;
+kjmp2_decode_frame= mp2_dec.kjmp2_decode_frame;
+
+var get_mp2=function(f){
+xhr = new XMLHttpRequest();
+xhr.open("GET", "a.mp2", false);
+xhr.onload=f;
+xhr.send(null);
+};
+var load_mp2_button=document.createElement("button");
+load_mp2_button.innerHTML="Load mp2";
+
+var finish_decode=function(){
+
+snd=dec;
+init_audio();
+};
+
+decode_frame=function(){
+but.style.display="none";
+l=[];
+r=[];
+if(bytes_left >= 0){
+pcm=[];
+value=kjmp2_decode_frame(mp2,frame,pcm,l,r);
+if (value) {
+for(var i=0;i<l.length;i++){
+dec.push(l[i]);
+dec.push(r[i]);
+};
+frame=frame.subarray(value);
+bytes_left -= value;
+t.innerHTML="Bytes left to decode: " +bytes_left;
+setTimeout(arguments.callee,0);
+};
+}else{
+fin=Date.now();
+took.innerHTML="Took: " +((fin-st)/1000)+ "seconds to decode";
+finish_decode();
+};
+};
+decode_mp2=function(){
+mp2= {id: null,    V:[[],[]],
+    Voffs: null};
+kjmp2_init(mp2);
+sample_rate = kjmp2_get_sample_rate(frame);
+but=document.createElement("button");
+but.innerHTML="Decode";
+but.onclick=decode_frame;
+document.body.appendChild(but);
+st=Date.now();
+// decode_frame();
+};
+
+
+document.body.appendChild(load_mp2_button);
+load_mp2_button.onclick=function(){
+this.parentNode.removeChild(this);
+s=document.createElement("div");
+s.innerHTML="Loading please wait";
+document.body.appendChild(s);
+get_mp2(function(){
+s.parentNode.removeChild(s);
+dec=[];
+r=[];
+l=[];
+buffer = xhr.mozResponseArrayBuffer;
+frame= new Uint8Array(buffer);
+  bytes_left = frame.length-100;
+decode_mp2();
+});
+
+
+};
+};
+var init_audio=function(){
+var AudioDataDestination=function(sampleRate, readFn) {
+        // Initialize the audio output.
+        var audio = new Audio();
+        audio.mozSetup(2, sampleRate);
+
+        var currentWritePosition = 0;
+        var prebufferSize = sampleRate ; // buffer 500ms
+        var tail = null, tailPosition;
+
+        // The function called with regular interval to populate 
+        // the audio output buffer.
+        setInterval(function() {
+          var written;
+          // Check if some data was not written in previous attempts.
+          if(tail) {
+            written = audio.mozWriteAudio(tail.subarray(tailPosition));
+            currentWritePosition += written;
+            tailPosition += written;
+            if(tailPosition < tail.length) {
+              // Not all the data was written, saving the tail...
+              return; // ... and exit the function.
+            }
+            tail = null;
+          }
+
+          // Check if we need add some data to the audio output.
+          var currentPosition = audio.mozCurrentSampleOffset();
+          var available = currentPosition + prebufferSize - currentWritePosition;
+          if(available > 0) {
+            // Request some sound data from the callback function.
+            var soundData = new Float32Array(available);
+            readFn(soundData);
+
+            // Writting the data.
+            written = audio.mozWriteAudio(soundData);
+            if(written < soundData.length) {
+              // Not all the data was written, saving the tail.
+              tail = soundData;
+              tailPosition = written;
+            }
+            currentWritePosition += written;
+          }
+        }, 100);
+      }
+
+      // Control and generate the sound.
+
+      var frequency = 0, currentSoundSample;
+      var sampleRate = 44100;
+var  requestSoundData=function(soundData) {
+        if (!frequency) { 
+          return; // no sound selected
+        }
+
+        var k = 2* Math.PI * frequency / sampleRate;
+        for (var i=0, size=soundData.length; i<size; i++) {
+          soundData[i] = snd[currentSoundSample];
+          currentSoundSample++;
+};
+        }        
+
+      var audioDestination = new AudioDataDestination(sampleRate, requestSoundData);
+var start=function() {
+        currentSoundSample = 0;
+frequency=1;
+        var k = 2* Math.PI * frequency / sampleRate;
+      }
+
+var stop=function() {
+        frequency = 0;
+      };
+var start_button=document.createElement("button");
+start_button.innerHTML="Start playback";
+start_button.onclick=start;
+var stop_button=document.createElement("button");
+stop_button.innerHTML="Stop playback";
+stop_button.onclick=stop;
+document.body.appendChild(start_button);
+document.body.appendChild(stop_button);
+
+
+};
+</script>
+</body>
+</html>
