@@ -108,7 +108,7 @@ s.parentNode.removeChild(s);
 dec=[];
 r=[];
 l=[];
-buffer = xhr.mozResponseArrayBuffer;
+buffer = xhr.response ? xhr.response : xhr.mozResponseArrayBuffer;
 frame= new Uint8Array(buffer);
   bytes_left = frame.length-100;
 decode_mp2();
