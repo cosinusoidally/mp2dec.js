@@ -68,10 +68,17 @@ if(bytes_left >= 0){
 pcm=[];
 value=kjmp2_decode_frame(mp2,frame,pcm,l,r);
 if (value) {
+if (!!(window.AudioContext || window.webkitAudioContext)) {
+for(var i=0;i<l.length;i++){
+lchannel.push(l[i]);
+rchannel.push(r[i]);
+};
+} else {
 for(var i=0;i<l.length;i++){
 dec.push(l[i]);
 dec.push(r[i]);
 };
+}
 frame=frame.subarray(value);
 bytes_left -= value;
 t.innerHTML="Bytes left to decode: " +bytes_left;
@@ -106,9 +113,11 @@ document.body.appendChild(s);
 get_mp2(function(){
 s.parentNode.removeChild(s);
 dec=[];
+lchannel = [];
+rchannel = [];
 r=[];
 l=[];
-buffer = xhr.mozResponseArrayBuffer;
+buffer = xhr.response ? xhr.response : xhr.mozResponseArrayBuffer;
 frame= new Uint8Array(buffer);
   bytes_left = frame.length-100;
 decode_mp2();
@@ -179,6 +188,22 @@ var  requestSoundData=function(soundData) {
 };
         }        
 
+    if (!!(window.AudioContext || window.webkitAudioContext)) {
+      var context = new (window.AudioContext || window.webkitAudioContext)();
+      var sndbuffer = context.createBuffer(2, lchannel.length + rchannel.length, sampleRate);
+      sndbuffer.copyToChannel(new Float32Array(lchannel), 0, 0);
+      sndbuffer.copyToChannel(new Float32Array(rchannel), 1, 0);
+      var source = context.createBufferSource();
+      source.buffer = sndbuffer;
+      source.connect(context.destination);
+var start=function() {
+        source.start(0);
+      }
+
+var stop=function() {
+        source.stop(0);
+      };
+    } else {
       var audioDestination = new AudioDataDestination(sampleRate, requestSoundData);
 var start=function() {
         currentSoundSample = 0;
@@ -189,6 +214,7 @@ frequency=1;
 var stop=function() {
         frequency = 0;
       };
+    }
 var start_button=document.createElement("button");
 start_button.innerHTML="Start playback";
 start_button.onclick=start;
